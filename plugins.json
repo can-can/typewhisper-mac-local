@@ -23,7 +23,8 @@
       "category": "action",
       "size": 220656,
       "downloadURL": "https://github.com/TypeWhisper/typewhisper-mac/releases/download/plugin-linear-v1.0.0/LinearPlugin.zip",
-      "iconSystemName": "list.bullet.rectangle"
+      "iconSystemName": "list.bullet.rectangle",
+      "requiresAPIKey": true
     },
     {
       "id": "com.typewhisper.webhook",
@@ -47,7 +48,8 @@
       "category": "transcription",
       "size": 103977,
       "downloadURL": "https://github.com/TypeWhisper/typewhisper-mac/releases/download/plugin-groq-v1.0.0/GroqPlugin.zip",
-      "iconSystemName": "bolt.fill"
+      "iconSystemName": "bolt.fill",
+      "requiresAPIKey": true
     },
     {
       "id": "com.typewhisper.openai",
@@ -59,7 +61,8 @@
       "category": "transcription",
       "size": 105085,
       "downloadURL": "https://github.com/TypeWhisper/typewhisper-mac/releases/download/plugin-openai-v1.0.0/OpenAIPlugin.zip",
-      "iconSystemName": "brain"
+      "iconSystemName": "brain",
+      "requiresAPIKey": true
     },
     {
       "id": "com.typewhisper.gemini",
@@ -71,7 +74,8 @@
       "category": "llm",
       "size": 102521,
       "downloadURL": "https://github.com/TypeWhisper/typewhisper-mac/releases/download/plugin-gemini-v1.0.0/GeminiPlugin.zip",
-      "iconSystemName": "sparkles"
+      "iconSystemName": "sparkles",
+      "requiresAPIKey": true
     }
   ]
 }
