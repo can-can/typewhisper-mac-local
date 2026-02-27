@@ -389,6 +389,7 @@ private struct WhisperKitSettingsView: View {
     private let bundle = Bundle(for: WhisperKitPlugin.self)
     @State private var modelState: WhisperModelState = .notLoaded
     @State private var downloadProgress: Double = 0
+    @State private var activeModelId: String?
     @State private var pollTimer: Timer?
 
     var body: some View {
@@ -435,6 +436,7 @@ private struct WhisperKitSettingsView: View {
     private func syncState() {
         modelState = plugin.modelState
         downloadProgress = plugin.downloadProgress
+        activeModelId = plugin._selectedModelId
     }
 
     private func startPolling() {
@@ -496,7 +498,7 @@ private struct WhisperKitSettingsView: View {
                 .buttonStyle(.bordered)
                 .controlSize(.small)
             }
-        } else if case .downloading = modelState, plugin._selectedModelId == modelDef.id {
+        } else if case .downloading = modelState, activeModelId == modelDef.id {
             HStack(spacing: 8) {
                 ProgressView(value: downloadProgress)
                     .frame(width: 80)
@@ -504,7 +506,7 @@ private struct WhisperKitSettingsView: View {
                     .font(.caption)
                     .monospacedDigit()
             }
-        } else if case .loading(let phase) = modelState, plugin._selectedModelId == modelDef.id {
+        } else if case .loading(let phase) = modelState, activeModelId == modelDef.id {
             HStack(spacing: 8) {
                 ProgressView()
                     .controlSize(.small)
@@ -513,6 +515,7 @@ private struct WhisperKitSettingsView: View {
             }
         } else {
             Button(String(localized: "Download & Load", bundle: bundle)) {
+                activeModelId = modelDef.id
                 modelState = .downloading
                 downloadProgress = 0.05
                 startPolling()
