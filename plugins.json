@@ -57,8 +57,8 @@
       "author": "TypeWhisper",
       "description": "Cloud transcription and LLM via OpenAI API. Whisper and GPT models, requires API key.",
       "category": "transcription",
-      "size": 0,
-      "downloadURL": "",
+      "size": 105085,
+      "downloadURL": "https://github.com/TypeWhisper/typewhisper-mac/releases/download/plugin-openai-v1.0.0/OpenAIPlugin.zip",
       "iconSystemName": "brain"
     },
     {
