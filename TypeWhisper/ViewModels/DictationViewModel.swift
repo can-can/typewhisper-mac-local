@@ -414,6 +414,17 @@ final class DictationViewModel: ObservableObject {
             return
         }
 
+        let peakLevel = audioRecordingService.peakRawAudioLevel
+        guard peakLevel >= 0.01 else {
+            showNotchFeedback(
+                message: String(localized: "No speech detected"),
+                icon: "mic.slash",
+                duration: 2.0
+            )
+            resetDictationState()
+            return
+        }
+
         state = .processing
 
         transcriptionTask = Task {

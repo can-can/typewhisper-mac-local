@@ -2160,6 +2160,16 @@
         }
       }
     },
+    "No speech detected": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keine Sprache erkannt"
+          }
+        }
+      }
+    },
     "No snippets yet": {
       "localizations": {
         "de": {
