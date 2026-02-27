@@ -261,7 +261,7 @@ private struct OpenAISettingsView: View {
                 }
             }
 
-            Text("API keys are stored securely in the Keychain.")
+            Text("API keys are stored securely in the Keychain")
                 .font(.caption)
                 .foregroundStyle(.secondary)
         }

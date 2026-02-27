@@ -17,6 +17,16 @@ struct RegistryPlugin: Codable, Identifiable {
     let downloadURL: String
     let iconSystemName: String?
     let requiresAPIKey: Bool?
+    let descriptions: [String: String]?
+
+    var localizedDescription: String {
+        if let descriptions,
+           let lang = Locale.current.language.languageCode?.identifier,
+           let localized = descriptions[lang] {
+            return localized
+        }
+        return description
+    }
 }
 
 struct PluginRegistryResponse: Codable {

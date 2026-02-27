@@ -127,6 +127,15 @@
 		AA00000000000000000169 /* SpeechAnalyzerPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB00000000000000000160 /* SpeechAnalyzerPlugin.swift */; };
 		AA00000000000000000170 /* manifest.json in Resources */ = {isa = PBXBuildFile; fileRef = BB00000000000000000161 /* manifest.json */; };
 		AA00000000000000000171 /* TypeWhisperPluginSDK in Frameworks */ = {isa = PBXBuildFile; productRef = PP00000000000000000018 /* TypeWhisperPluginSDK */; };
+		AA00000000000000000172 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = BB00000000000000000162 /* Localizable.xcstrings */; };
+		AA00000000000000000173 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = BB00000000000000000163 /* Localizable.xcstrings */; };
+		AA00000000000000000174 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = BB00000000000000000164 /* Localizable.xcstrings */; };
+		AA00000000000000000175 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = BB00000000000000000165 /* Localizable.xcstrings */; };
+		AA00000000000000000176 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = BB00000000000000000166 /* Localizable.xcstrings */; };
+		AA00000000000000000177 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = BB00000000000000000167 /* Localizable.xcstrings */; };
+		AA00000000000000000178 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = BB00000000000000000168 /* Localizable.xcstrings */; };
+		AA00000000000000000179 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = BB00000000000000000169 /* Localizable.xcstrings */; };
+		AA00000000000000000180 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = BB00000000000000000170 /* Localizable.xcstrings */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -249,6 +258,15 @@
 		BB00000000000000000159 /* SpeechAnalyzerPlugin.bundle */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SpeechAnalyzerPlugin.bundle; sourceTree = BUILT_PRODUCTS_DIR; };
 		BB00000000000000000160 /* SpeechAnalyzerPlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpeechAnalyzerPlugin.swift; sourceTree = "<group>"; };
 		BB00000000000000000161 /* manifest.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = manifest.json; sourceTree = "<group>"; };
+		BB00000000000000000162 /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
+		BB00000000000000000163 /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
+		BB00000000000000000164 /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
+		BB00000000000000000165 /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
+		BB00000000000000000166 /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
+		BB00000000000000000167 /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
+		BB00000000000000000168 /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
+		BB00000000000000000169 /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
+		BB00000000000000000170 /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -685,6 +703,7 @@
 			children = (
 				BB00000000000000000131 /* WebhookPlugin.swift */,
 				BB00000000000000000132 /* manifest.json */,
+				BB00000000000000000162 /* Localizable.xcstrings */,
 			);
 			name = WebhookPlugin;
 			path = Plugins/WebhookPlugin;
@@ -695,6 +714,7 @@
 			children = (
 				BB00000000000000000136 /* GroqPlugin.swift */,
 				BB00000000000000000137 /* manifest.json */,
+				BB00000000000000000163 /* Localizable.xcstrings */,
 			);
 			name = GroqPlugin;
 			path = Plugins/GroqPlugin;
@@ -705,6 +725,7 @@
 			children = (
 				BB00000000000000000139 /* OpenAIPlugin.swift */,
 				BB00000000000000000140 /* manifest.json */,
+				BB00000000000000000164 /* Localizable.xcstrings */,
 			);
 			name = OpenAIPlugin;
 			path = Plugins/OpenAIPlugin;
@@ -715,6 +736,7 @@
 			children = (
 				BB00000000000000000141 /* GeminiPlugin.swift */,
 				BB00000000000000000142 /* manifest.json */,
+				BB00000000000000000165 /* Localizable.xcstrings */,
 			);
 			name = GeminiPlugin;
 			path = Plugins/GeminiPlugin;
@@ -725,6 +747,7 @@
 			children = (
 				BB00000000000000000144 /* LinearPlugin.swift */,
 				BB00000000000000000145 /* manifest.json */,
+				BB00000000000000000166 /* Localizable.xcstrings */,
 			);
 			name = LinearPlugin;
 			path = Plugins/LinearPlugin;
@@ -735,6 +758,7 @@
 			children = (
 				BB00000000000000000150 /* Qwen3Plugin.swift */,
 				BB00000000000000000151 /* manifest.json */,
+				BB00000000000000000167 /* Localizable.xcstrings */,
 			);
 			name = Qwen3Plugin;
 			path = Plugins/Qwen3Plugin;
@@ -745,6 +769,7 @@
 			children = (
 				BB00000000000000000154 /* WhisperKitPlugin.swift */,
 				BB00000000000000000155 /* manifest.json */,
+				BB00000000000000000168 /* Localizable.xcstrings */,
 			);
 			name = WhisperKitPlugin;
 			path = Plugins/WhisperKitPlugin;
@@ -755,6 +780,7 @@
 			children = (
 				BB00000000000000000157 /* ParakeetPlugin.swift */,
 				BB00000000000000000158 /* manifest.json */,
+				BB00000000000000000169 /* Localizable.xcstrings */,
 			);
 			name = ParakeetPlugin;
 			path = Plugins/ParakeetPlugin;
@@ -765,6 +791,7 @@
 			children = (
 				BB00000000000000000160 /* SpeechAnalyzerPlugin.swift */,
 				BB00000000000000000161 /* manifest.json */,
+				BB00000000000000000170 /* Localizable.xcstrings */,
 			);
 			name = SpeechAnalyzerPlugin;
 			path = Plugins/SpeechAnalyzerPlugin;
@@ -1092,6 +1119,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				AA00000000000000000132 /* manifest.json in Resources */,
+				AA00000000000000000172 /* Localizable.xcstrings in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1100,6 +1128,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				AA00000000000000000136 /* manifest.json in Resources */,
+				AA00000000000000000173 /* Localizable.xcstrings in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1108,6 +1137,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				AA00000000000000000139 /* manifest.json in Resources */,
+				AA00000000000000000174 /* Localizable.xcstrings in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1116,6 +1146,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				AA00000000000000000142 /* manifest.json in Resources */,
+				AA00000000000000000175 /* Localizable.xcstrings in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1124,6 +1155,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				AA00000000000000000149 /* manifest.json in Resources */,
+				AA00000000000000000176 /* Localizable.xcstrings in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1132,6 +1164,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				AA00000000000000000155 /* manifest.json in Resources */,
+				AA00000000000000000177 /* Localizable.xcstrings in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1140,6 +1173,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				AA00000000000000000162 /* manifest.json in Resources */,
+				AA00000000000000000178 /* Localizable.xcstrings in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1148,6 +1182,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				AA00000000000000000166 /* manifest.json in Resources */,
+				AA00000000000000000179 /* Localizable.xcstrings in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1156,6 +1191,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				AA00000000000000000170 /* manifest.json in Resources */,
+				AA00000000000000000180 /* Localizable.xcstrings in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

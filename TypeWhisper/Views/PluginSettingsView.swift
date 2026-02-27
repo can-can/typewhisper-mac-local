@@ -392,7 +392,7 @@ private struct AvailablePluginRow: View {
                             .clipShape(Capsule())
                     }
                 }
-                Text(plugin.description)
+                Text(plugin.localizedDescription)
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .lineLimit(2)
