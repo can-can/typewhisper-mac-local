@@ -185,6 +185,7 @@ final class PluginRegistryService: ObservableObject {
             PluginManager.shared.loadPlugin(at: destURL)
 
             installStates.removeValue(forKey: plugin.id)
+            lastFetchDate = nil // invalidate cache so installInfo refreshes
             logger.info("Installed plugin \(plugin.id) v\(plugin.version)")
         } catch {
             installStates[plugin.id] = .error(error.localizedDescription)

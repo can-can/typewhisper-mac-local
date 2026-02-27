@@ -51,6 +51,13 @@ struct PluginSettingsView: View {
 
     // MARK: - Installed Tab
 
+    private var sortedPlugins: [LoadedPlugin] {
+        pluginManager.loadedPlugins.sorted { a, b in
+            if a.isBundled != b.isBundled { return a.isBundled }
+            return a.manifest.name.localizedCompare(b.manifest.name) == .orderedAscending
+        }
+    }
+
     private var installedTab: some View {
         Form {
             if pluginManager.loadedPlugins.isEmpty {
@@ -67,10 +74,11 @@ struct PluginSettingsView: View {
                 }
             } else {
                 Section(String(localized: "Plugins")) {
-                    ForEach(pluginManager.loadedPlugins) { plugin in
+                    ForEach(sortedPlugins) { plugin in
                         InstalledPluginRow(
                             plugin: plugin,
                             installInfo: registryService.installInfo(for: plugin.id),
+                            installState: registryService.installStates[plugin.id],
                             onUpdate: {
                                 if let registryPlugin = registryService.registry.first(where: { $0.id == plugin.id }) {
                                     Task { await registryService.downloadAndInstall(registryPlugin) }
@@ -197,6 +205,7 @@ struct PluginSettingsView: View {
 private struct InstalledPluginRow: View {
     let plugin: LoadedPlugin
     let installInfo: PluginInstallInfo
+    let installState: PluginRegistryService.InstallState?
     let onUpdate: () -> Void
     let onUninstall: () -> Void
     @State private var showSettings = false
@@ -244,7 +253,37 @@ private struct InstalledPluginRow: View {
 
             Spacer()
 
-            if case .updateAvailable = installInfo {
+            if let state = installState {
+                switch state {
+                case .downloading(let progress):
+                    HStack(spacing: 6) {
+                        ProgressView(value: progress)
+                            .frame(width: 80)
+                        Text("\(Int(progress * 100))%")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .monospacedDigit()
+                            .frame(width: 32, alignment: .trailing)
+                    }
+                case .extracting:
+                    HStack(spacing: 6) {
+                        ProgressView()
+                            .controlSize(.small)
+                        Text(String(localized: "Installing..."))
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                case .error(let message):
+                    HStack(spacing: 6) {
+                        Image(systemName: "exclamationmark.triangle.fill")
+                            .foregroundStyle(.red)
+                        Text(message)
+                            .font(.caption2)
+                            .foregroundStyle(.red)
+                            .lineLimit(1)
+                    }
+                }
+            } else if case .updateAvailable = installInfo {
                 Button(String(localized: "Update")) {
                     onUpdate()
                 }
