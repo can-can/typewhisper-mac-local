@@ -76,6 +76,8 @@ struct MenuBarView: View {
     @StateObject private var status = MenuBarState()
 
     var body: some View {
+        let _ = { SettingsWindowOpener.shared.openWindow = openWindow }()
+
         Label(status.statusText, systemImage: status.statusImage)
 
         Divider()

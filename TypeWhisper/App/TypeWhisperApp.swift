@@ -1,4 +1,5 @@
 import SwiftUI
+import AVFoundation
 import Combine
 #if !APPSTORE
 @preconcurrency import Sparkle
@@ -138,6 +139,16 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         // Prompt palette hotkey - opens standalone prompt palette panel
         ServiceContainer.shared.hotkeyService.onPromptPaletteToggle = {
             DictationViewModel.shared.triggerStandalonePromptSelection()
+        }
+
+        // Auto-open Settings with setup wizard when microphone permission is not yet granted
+        if AVAudioApplication.shared.recordPermission != .granted {
+            UserDefaults.standard.set(false, forKey: UserDefaultsKeys.setupWizardCompleted)
+            HomeViewModel.shared.showSetupWizard = true
+            NSApp.setActivationPolicy(.regular)
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                self.openSettingsWindow()
+            }
         }
 
         // Observe menu bar icon visibility changes
