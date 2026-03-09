@@ -51,6 +51,17 @@ final class AudioDeviceService: ObservableObject, @unchecked Sendable {
                 self?.handleDeviceChange()
             }
             .store(in: &cancellables)
+
+        $selectedDeviceUID
+            .removeDuplicates()
+            .dropFirst()
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in
+                guard let self, self.isPreviewActive else { return }
+                self.stopPreview()
+                self.startPreview()
+            }
+            .store(in: &cancellables)
     }
 
     deinit {
@@ -300,13 +311,13 @@ final class AudioDeviceService: ObservableObject, @unchecked Sendable {
            !newDevices.contains(where: { $0.uid == uid }) {
             let disconnectedName = oldDevices.first(where: { $0.uid == uid })?.name
             logger.info("Selected device disconnected: \(disconnectedName ?? uid)")
-            selectedDeviceUID = nil
-            disconnectedDeviceName = disconnectedName
 
-            // If preview was running on the disconnected device, stop it
             if isPreviewActive {
                 stopPreview()
             }
+
+            selectedDeviceUID = nil
+            disconnectedDeviceName = disconnectedName
         }
     }
 }
