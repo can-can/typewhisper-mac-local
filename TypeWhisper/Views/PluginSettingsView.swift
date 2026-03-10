@@ -165,7 +165,10 @@ struct PluginSettingsView: View {
                                 plugin: plugin,
                                 installState: registryService.installStates[plugin.id],
                                 onInstall: {
-                                    Task { await registryService.downloadAndInstall(plugin) }
+                                    Task {
+                                        await registryService.downloadAndInstall(plugin)
+                                        PluginManager.shared.setPluginEnabled(plugin.id, enabled: true)
+                                    }
                                 }
                             )
                         }
