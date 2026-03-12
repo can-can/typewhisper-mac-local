@@ -166,7 +166,7 @@
         "de": "Transkriptionen als Markdown-Notizen in deinem Obsidian-Vault speichern. Unterstuetzt Tagesnotizen, Frontmatter und Auto-Export."
       },
       "category": "action",
-      "size": 0,
+      "size": 161818,
       "downloadURL": "https://github.com/TypeWhisper/typewhisper-mac/releases/download/plugin-obsidian-v1.0.0/ObsidianPlugin.zip",
       "iconSystemName": "doc.text"
     }
