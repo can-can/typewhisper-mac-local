@@ -17,7 +17,7 @@ struct IndicatorPreviewView: View {
                     overlayPreview
                 }
             }
-            .preferredColorScheme(.dark)
+            .environment(\.colorScheme, .dark)
         }
         .frame(height: 110)
         .animation(.easeInOut(duration: 0.2), value: dictation.indicatorStyle)
