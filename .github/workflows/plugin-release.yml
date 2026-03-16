@@ -47,22 +47,21 @@ jobs:
             livetranscript) TARGET="LiveTranscriptPlugin" ;;
             *) echo "Unknown plugin: $PLUGIN_NAME" && exit 1 ;;
           esac
-          # Set deployment target, Xcode version, and Swift embedding per plugin
-          # - SpeechAnalyzer: Xcode 26.2, macOS 26 (native APIs, no compat libs needed)
-          # - Qwen3/Voxtral: Xcode 26.2, macOS 14 (mlx-audio-swift needs Swift 6.2,
-          #   embed Swift compat libs so libswiftCompatibilitySpan.dylib loads on macOS 15)
-          # - All others: Xcode 16.2, macOS 14 (Swift 6.0, no compat libs needed)
+          # Set deployment target and Swift embedding per plugin
+          # All plugins use Xcode 26.2 (mlx-audio-swift requires Swift 6.2 for package resolution,
+          # and workspace-state.json v7 from Xcode 26.2 is incompatible with Xcode 16.2)
+          # - SpeechAnalyzer: macOS 26 deployment target
+          # - Qwen3/Voxtral: macOS 14 + embed Swift compat libs (MLX uses Swift 6.2 features)
+          # - All others: macOS 14, no compat libs needed (simple Foundation/SDK code)
           EMBED_SWIFT_LIBS="NO"
+          XCODE_VERSION="26.2"
           if [ "$TARGET" = "SpeechAnalyzerPlugin" ]; then
             DEPLOY_TARGET="26.0"
-            XCODE_VERSION="26.2"
           elif [ "$TARGET" = "Qwen3Plugin" ] || [ "$TARGET" = "VoxtralPlugin" ]; then
             DEPLOY_TARGET="14.0"
-            XCODE_VERSION="26.2"
             EMBED_SWIFT_LIBS="YES"
           else
             DEPLOY_TARGET="14.0"
-            XCODE_VERSION="16.2"
           fi
           echo "TARGET=$TARGET" >> $GITHUB_ENV
           echo "DEPLOY_TARGET=$DEPLOY_TARGET" >> $GITHUB_ENV
@@ -73,18 +72,16 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
 
-      - name: Resolve Swift packages
-        run: |
-          # Always resolve with Xcode 26.2 because mlx-audio-swift requires Swift 6.2
-          sudo xcode-select -s /Applications/Xcode_26.2.app/Contents/Developer
-          xcodebuild -resolvePackageDependencies \
-            -project TypeWhisper.xcodeproj \
-            -scheme TypeWhisper
-
       - name: Setup Xcode
         uses: maxim-lobanov/setup-xcode@v1
         with:
           xcode-version: ${{ env.XCODE_VERSION }}
+
+      - name: Resolve Swift packages
+        run: |
+          xcodebuild -resolvePackageDependencies \
+            -project TypeWhisper.xcodeproj \
+            -scheme TypeWhisper
 
       - name: Patch manifest version
         run: |
