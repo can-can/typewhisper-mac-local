@@ -46,6 +46,7 @@ jobs:
             script) TARGET="ScriptPlugin" ;;
             livetranscript) TARGET="LiveTranscriptPlugin" ;;
             granite) TARGET="GranitePlugin" ;;
+            cloudflare-asr) TARGET="CloudflareASRPlugin" ;;
             *) echo "Unknown plugin: $PLUGIN_NAME" && exit 1 ;;
           esac
           # Set deployment target and Swift embedding per plugin
