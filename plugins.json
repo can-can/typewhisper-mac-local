@@ -297,6 +297,22 @@
       "downloadURL": "https://github.com/TypeWhisper/typewhisper-mac/releases/download/plugin-openai-vector-memory-v1.0.0/OpenAIVectorMemoryPlugin.zip",
       "minOSVersion": "14.0",
       "iconSystemName": "brain"
+    },
+    {
+      "id": "com.typewhisper.memory.file",
+      "name": "File Memory",
+      "version": "1.0.0",
+      "minHostVersion": "0.14.0",
+      "author": "TypeWhisper",
+      "description": "Store memories as local JSON files with text-based search. Fully offline, no API key required.",
+      "descriptions": {
+        "de": "Speichert Erinnerungen als lokale JSON-Dateien mit textbasierter Suche. Komplett offline, kein API-Key noetig."
+      },
+      "category": "memory",
+      "size": 107195,
+      "downloadURL": "https://github.com/TypeWhisper/typewhisper-mac/releases/download/plugin-file-memory-v1.0.0/FileMemoryPlugin.zip",
+      "minOSVersion": "14.0",
+      "iconSystemName": "doc.text"
     }
   ]
 }
