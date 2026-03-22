@@ -2223,6 +2223,36 @@
     "LLM:" : {
 
     },
+    "All presets imported" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alle Vorlagen importiert"
+          }
+        }
+      }
+    },
+    "Import All" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alle importieren"
+          }
+        }
+      }
+    },
+    "Import Preset" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vorlage importieren"
+          }
+        }
+      }
+    },
     "Load Presets" : {
       "localizations" : {
         "de" : {
@@ -2997,6 +3027,40 @@
         }
       }
     },
+    "preset.createTable" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tabelle erstellen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Create Table"
+          }
+        }
+      }
+    },
+    "preset.draftEmail" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "E-Mail entwerfen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Draft Email"
+          }
+        }
+      }
+    },
     "preset.formatAsList" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -3010,6 +3074,40 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Format as List"
+          }
+        }
+      }
+    },
+    "preset.jsonData" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "JSON-Daten"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "JSON Data"
+          }
+        }
+      }
+    },
+    "preset.meetingNotes" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Besprechungsnotizen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Meeting Notes"
           }
         }
       }
