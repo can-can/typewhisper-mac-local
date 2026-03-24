@@ -13,6 +13,7 @@ final class OpenAIPlugin: NSObject, TranscriptionEnginePlugin, LLMProviderPlugin
     fileprivate var _apiKey: String?
     fileprivate var _selectedModelId: String?
     fileprivate var _selectedLLMModelId: String?
+    fileprivate var _fetchedLLMModels: [OpenAIFetchedModel] = []
 
     private let transcriptionHelper = PluginOpenAITranscriptionHelper(
         baseURL: "https://api.openai.com",
@@ -30,6 +31,10 @@ final class OpenAIPlugin: NSObject, TranscriptionEnginePlugin, LLMProviderPlugin
     func activate(host: HostServices) {
         self.host = host
         _apiKey = host.loadSecret(key: "api-key")
+        if let data = host.userDefault(forKey: "fetchedLLMModels") as? Data,
+           let models = try? JSONDecoder().decode([OpenAIFetchedModel].self, from: data) {
+            _fetchedLLMModels = models
+        }
         _selectedModelId = host.userDefault(forKey: "selectedModel") as? String
             ?? transcriptionModels.first?.id
         _selectedLLMModelId = host.userDefault(forKey: "selectedLLMModel") as? String
@@ -111,15 +116,20 @@ final class OpenAIPlugin: NSObject, TranscriptionEnginePlugin, LLMProviderPlugin
 
     var isAvailable: Bool { isConfigured }
 
+    private static let fallbackLLMModels: [PluginModelInfo] = [
+        PluginModelInfo(id: "gpt-4.1-nano", displayName: "GPT-4.1 Nano"),
+        PluginModelInfo(id: "gpt-4.1-mini", displayName: "GPT-4.1 Mini"),
+        PluginModelInfo(id: "gpt-4.1", displayName: "GPT-4.1"),
+        PluginModelInfo(id: "gpt-4o", displayName: "GPT-4o"),
+        PluginModelInfo(id: "gpt-4o-mini", displayName: "GPT-4o Mini"),
+        PluginModelInfo(id: "o4-mini", displayName: "o4-mini"),
+    ]
+
     var supportedModels: [PluginModelInfo] {
-        [
-            PluginModelInfo(id: "gpt-4.1-nano", displayName: "GPT-4.1 Nano"),
-            PluginModelInfo(id: "gpt-4.1-mini", displayName: "GPT-4.1 Mini"),
-            PluginModelInfo(id: "gpt-4.1", displayName: "GPT-4.1"),
-            PluginModelInfo(id: "gpt-4o", displayName: "GPT-4o"),
-            PluginModelInfo(id: "gpt-4o-mini", displayName: "GPT-4o Mini"),
-            PluginModelInfo(id: "o4-mini", displayName: "o4-mini"),
-        ]
+        if !_fetchedLLMModels.isEmpty {
+            return _fetchedLLMModels.map { PluginModelInfo(id: $0.id, displayName: $0.id) }
+        }
+        return Self.fallbackLLMModels
     }
 
     func process(systemPrompt: String, userText: String, model: String?) async throws -> String {
@@ -176,6 +186,70 @@ final class OpenAIPlugin: NSObject, TranscriptionEnginePlugin, LLMProviderPlugin
     func validateApiKey(_ key: String) async -> Bool {
         await transcriptionHelper.validateApiKey(key)
     }
+
+    fileprivate func setFetchedLLMModels(_ models: [OpenAIFetchedModel]) {
+        _fetchedLLMModels = models
+        if let data = try? JSONEncoder().encode(models) {
+            host?.setUserDefault(data, forKey: "fetchedLLMModels")
+        }
+        host?.notifyCapabilitiesChanged()
+    }
+
+    fileprivate func fetchLLMModels() async -> [OpenAIFetchedModel] {
+        guard let apiKey = _apiKey, !apiKey.isEmpty,
+              let url = URL(string: "https://api.openai.com/v1/models") else { return [] }
+
+        var request = URLRequest(url: url)
+        request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
+        request.timeoutInterval = 10
+
+        do {
+            let (data, response) = try await PluginHTTPClient.data(for: request)
+            guard let httpResponse = response as? HTTPURLResponse,
+                  httpResponse.statusCode == 200 else { return [] }
+
+            struct ModelsResponse: Decodable {
+                let data: [OpenAIFetchedModel]
+            }
+
+            let decoded = try JSONDecoder().decode(ModelsResponse.self, from: data)
+            return decoded.data
+                .filter { Self.isChatModel($0.id) }
+                .sorted { $0.id < $1.id }
+        } catch {
+            return []
+        }
+    }
+
+    private static let chatPrefixes = ["gpt-", "o1-", "o3-", "o4-", "chatgpt-"]
+    private static let excludeSuffixes = ["-transcribe", "-tts", "-embedding", "-realtime", "-search"]
+    private static let excludeContains = ["dall-e", "whisper", "tts-", "text-embedding", "audio-preview", "gpt-image"]
+
+    nonisolated static func isChatModel(_ id: String) -> Bool {
+        let lowered = id.lowercased()
+        guard chatPrefixes.contains(where: { lowered.hasPrefix($0) }) else { return false }
+        if excludeSuffixes.contains(where: { lowered.hasSuffix($0) }) { return false }
+        if excludeContains.contains(where: { lowered.contains($0) }) { return false }
+        return true
+    }
+}
+
+// MARK: - Fetched Model
+
+struct OpenAIFetchedModel: Codable, Sendable {
+    let id: String
+    let owned_by: String?
+
+    enum CodingKeys: String, CodingKey {
+        case id
+        case owned_by
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decode(String.self, forKey: .id)
+        owned_by = try container.decodeIfPresent(String.self, forKey: .owned_by)
+    }
 }
 
 // MARK: - Settings View
@@ -187,6 +261,8 @@ private struct OpenAISettingsView: View {
     @State private var validationResult: Bool?
     @State private var showApiKey = false
     @State private var selectedModel: String = ""
+    @State private var selectedLLMModel: String = ""
+    @State private var fetchedLLMModels: [OpenAIFetchedModel] = []
     private let bundle = Bundle(for: OpenAIPlugin.self)
 
     var body: some View {
@@ -253,12 +329,12 @@ private struct OpenAISettingsView: View {
             if plugin.isConfigured {
                 Divider()
 
-                // Model Selection
+                // Transcription Model Selection
                 VStack(alignment: .leading, spacing: 8) {
-                    Text("Model", bundle: bundle)
+                    Text("Transcription Model", bundle: bundle)
                         .font(.headline)
 
-                    Picker("Model", selection: $selectedModel) {
+                    Picker("Transcription Model", selection: $selectedModel) {
                         ForEach(plugin.transcriptionModels, id: \.id) { model in
                             Text(model.displayName).tag(model.id)
                         }
@@ -270,6 +346,42 @@ private struct OpenAISettingsView: View {
 
                     if selectedModel.hasPrefix("gpt-4o") {
                         Text("GPT-4o models do not support Whisper Translate (translation to English).", bundle: bundle)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+
+                Divider()
+
+                // LLM Model Selection
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack {
+                        Text("LLM Model", bundle: bundle)
+                            .font(.headline)
+
+                        Spacer()
+
+                        Button {
+                            refreshLLMModels()
+                        } label: {
+                            Label(String(localized: "Refresh", bundle: bundle), systemImage: "arrow.clockwise")
+                        }
+                        .buttonStyle(.bordered)
+                        .controlSize(.small)
+                    }
+
+                    Picker("LLM Model", selection: $selectedLLMModel) {
+                        ForEach(plugin.supportedModels, id: \.id) { model in
+                            Text(model.displayName).tag(model.id)
+                        }
+                    }
+                    .labelsHidden()
+                    .onChange(of: selectedLLMModel) {
+                        plugin.selectLLMModel(selectedLLMModel)
+                    }
+
+                    if fetchedLLMModels.isEmpty {
+                        Text("Using default models. Press Refresh to fetch all available models.", bundle: bundle)
                             .font(.caption)
                             .foregroundStyle(.secondary)
                     }
@@ -286,6 +398,8 @@ private struct OpenAISettingsView: View {
                 apiKeyInput = key
             }
             selectedModel = plugin.selectedModelId ?? plugin.transcriptionModels.first?.id ?? ""
+            selectedLLMModel = plugin.selectedLLMModelId ?? plugin.supportedModels.first?.id ?? ""
+            fetchedLLMModels = plugin._fetchedLLMModels
         }
     }
 
@@ -299,9 +413,39 @@ private struct OpenAISettingsView: View {
         validationResult = nil
         Task {
             let isValid = await plugin.validateApiKey(trimmedKey)
+            if isValid {
+                let models = await plugin.fetchLLMModels()
+                await MainActor.run {
+                    isValidating = false
+                    validationResult = true
+                    if !models.isEmpty {
+                        fetchedLLMModels = models
+                        plugin.setFetchedLLMModels(models)
+                    }
+                }
+            } else {
+                await MainActor.run {
+                    isValidating = false
+                    validationResult = false
+                }
+            }
+        }
+    }
+
+    private func refreshLLMModels() {
+        Task {
+            let models = await plugin.fetchLLMModels()
             await MainActor.run {
-                isValidating = false
-                validationResult = isValid
+                if !models.isEmpty {
+                    fetchedLLMModels = models
+                    plugin.setFetchedLLMModels(models)
+                    // Keep selection if still valid, otherwise pick first
+                    if !models.contains(where: { $0.id == selectedLLMModel }),
+                       let first = models.first {
+                        selectedLLMModel = first.id
+                        plugin.selectLLMModel(first.id)
+                    }
+                }
             }
         }
     }

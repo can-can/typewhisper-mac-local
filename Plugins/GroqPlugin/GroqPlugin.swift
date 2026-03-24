@@ -13,6 +13,7 @@ final class GroqPlugin: NSObject, TranscriptionEnginePlugin, LLMProviderPlugin, 
     fileprivate var _apiKey: String?
     fileprivate var _selectedModelId: String?
     fileprivate var _selectedLLMModelId: String?
+    fileprivate var _fetchedLLMModels: [GroqFetchedModel] = []
 
     private let transcriptionHelper = PluginOpenAITranscriptionHelper(
         baseURL: "https://api.groq.com/openai",
@@ -30,6 +31,10 @@ final class GroqPlugin: NSObject, TranscriptionEnginePlugin, LLMProviderPlugin, 
     func activate(host: HostServices) {
         self.host = host
         _apiKey = host.loadSecret(key: "api-key")
+        if let data = host.userDefault(forKey: "fetchedLLMModels") as? Data,
+           let models = try? JSONDecoder().decode([GroqFetchedModel].self, from: data) {
+            _fetchedLLMModels = models
+        }
         _selectedModelId = host.userDefault(forKey: "selectedModel") as? String
             ?? transcriptionModels.first?.id
         _selectedLLMModelId = host.userDefault(forKey: "selectedLLMModel") as? String
@@ -106,14 +111,19 @@ final class GroqPlugin: NSObject, TranscriptionEnginePlugin, LLMProviderPlugin, 
 
     var isAvailable: Bool { isConfigured }
 
+    private static let fallbackLLMModels: [PluginModelInfo] = [
+        PluginModelInfo(id: "llama-3.3-70b-versatile", displayName: "Llama 3.3 70B"),
+        PluginModelInfo(id: "llama-3.1-8b-instant", displayName: "Llama 3.1 8B"),
+        PluginModelInfo(id: "openai/gpt-oss-120b", displayName: "GPT-OSS 120B"),
+        PluginModelInfo(id: "openai/gpt-oss-20b", displayName: "GPT-OSS 20B"),
+        PluginModelInfo(id: "moonshotai/kimi-k2-instruct-0905", displayName: "Kimi K2"),
+    ]
+
     var supportedModels: [PluginModelInfo] {
-        [
-            PluginModelInfo(id: "llama-3.3-70b-versatile", displayName: "Llama 3.3 70B"),
-            PluginModelInfo(id: "llama-3.1-8b-instant", displayName: "Llama 3.1 8B"),
-            PluginModelInfo(id: "openai/gpt-oss-120b", displayName: "GPT-OSS 120B"),
-            PluginModelInfo(id: "openai/gpt-oss-20b", displayName: "GPT-OSS 20B"),
-            PluginModelInfo(id: "moonshotai/kimi-k2-instruct-0905", displayName: "Kimi K2"),
-        ]
+        if !_fetchedLLMModels.isEmpty {
+            return _fetchedLLMModels.map { PluginModelInfo(id: $0.id, displayName: $0.id) }
+        }
+        return Self.fallbackLLMModels
     }
 
     func process(systemPrompt: String, userText: String, model: String?) async throws -> String {
@@ -170,6 +180,69 @@ final class GroqPlugin: NSObject, TranscriptionEnginePlugin, LLMProviderPlugin, 
     func validateApiKey(_ key: String) async -> Bool {
         await transcriptionHelper.validateApiKey(key)
     }
+
+    fileprivate func setFetchedLLMModels(_ models: [GroqFetchedModel]) {
+        _fetchedLLMModels = models
+        if let data = try? JSONEncoder().encode(models) {
+            host?.setUserDefault(data, forKey: "fetchedLLMModels")
+        }
+        host?.notifyCapabilitiesChanged()
+    }
+
+    fileprivate func fetchLLMModels() async -> [GroqFetchedModel] {
+        guard let apiKey = _apiKey, !apiKey.isEmpty,
+              let url = URL(string: "https://api.groq.com/openai/v1/models") else { return [] }
+
+        var request = URLRequest(url: url)
+        request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
+        request.timeoutInterval = 10
+
+        do {
+            let (data, response) = try await PluginHTTPClient.data(for: request)
+            guard let httpResponse = response as? HTTPURLResponse,
+                  httpResponse.statusCode == 200 else { return [] }
+
+            struct ModelsResponse: Decodable {
+                let data: [GroqFetchedModel]
+            }
+
+            let decoded = try JSONDecoder().decode(ModelsResponse.self, from: data)
+            return decoded.data
+                .filter { Self.isLLMModel($0.id) }
+                .sorted { $0.id < $1.id }
+        } catch {
+            return []
+        }
+    }
+
+    nonisolated static func isLLMModel(_ id: String) -> Bool {
+        let lowered = id.lowercased()
+        let excluded = [
+            "whisper", "distil-whisper", "tool-use",
+            "orpheus",       // TTS models
+            "prompt-guard",  // safety/guard models
+            "safeguard",     // safety/guard models
+        ]
+        return !excluded.contains(where: { lowered.contains($0) })
+    }
+}
+
+// MARK: - Fetched Model
+
+struct GroqFetchedModel: Codable, Sendable {
+    let id: String
+    let owned_by: String?
+
+    enum CodingKeys: String, CodingKey {
+        case id
+        case owned_by
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decode(String.self, forKey: .id)
+        owned_by = try container.decodeIfPresent(String.self, forKey: .owned_by)
+    }
 }
 
 // MARK: - Settings View
@@ -181,6 +254,8 @@ private struct GroqSettingsView: View {
     @State private var validationResult: Bool?
     @State private var showApiKey = false
     @State private var selectedModel: String = ""
+    @State private var selectedLLMModel: String = ""
+    @State private var fetchedLLMModels: [GroqFetchedModel] = []
     private let bundle = Bundle(for: GroqPlugin.self)
 
     var body: some View {
@@ -247,12 +322,12 @@ private struct GroqSettingsView: View {
             if plugin.isConfigured {
                 Divider()
 
-                // Model Selection
+                // Transcription Model Selection
                 VStack(alignment: .leading, spacing: 8) {
-                    Text("Model", bundle: bundle)
+                    Text("Transcription Model", bundle: bundle)
                         .font(.headline)
 
-                    Picker("Model", selection: $selectedModel) {
+                    Picker("Transcription Model", selection: $selectedModel) {
                         ForEach(plugin.transcriptionModels, id: \.id) { model in
                             Text(model.displayName).tag(model.id)
                         }
@@ -260,6 +335,42 @@ private struct GroqSettingsView: View {
                     .labelsHidden()
                     .onChange(of: selectedModel) {
                         plugin.selectModel(selectedModel)
+                    }
+                }
+
+                Divider()
+
+                // LLM Model Selection
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack {
+                        Text("LLM Model", bundle: bundle)
+                            .font(.headline)
+
+                        Spacer()
+
+                        Button {
+                            refreshLLMModels()
+                        } label: {
+                            Label(String(localized: "Refresh", bundle: bundle), systemImage: "arrow.clockwise")
+                        }
+                        .buttonStyle(.bordered)
+                        .controlSize(.small)
+                    }
+
+                    Picker("LLM Model", selection: $selectedLLMModel) {
+                        ForEach(plugin.supportedModels, id: \.id) { model in
+                            Text(model.displayName).tag(model.id)
+                        }
+                    }
+                    .labelsHidden()
+                    .onChange(of: selectedLLMModel) {
+                        plugin.selectLLMModel(selectedLLMModel)
+                    }
+
+                    if fetchedLLMModels.isEmpty {
+                        Text("Using default models. Press Refresh to fetch all available models.", bundle: bundle)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
                     }
                 }
             }
@@ -274,6 +385,8 @@ private struct GroqSettingsView: View {
                 apiKeyInput = key
             }
             selectedModel = plugin.selectedModelId ?? plugin.transcriptionModels.first?.id ?? ""
+            selectedLLMModel = plugin.selectedLLMModelId ?? plugin.supportedModels.first?.id ?? ""
+            fetchedLLMModels = plugin._fetchedLLMModels
         }
     }
 
@@ -287,9 +400,38 @@ private struct GroqSettingsView: View {
         validationResult = nil
         Task {
             let isValid = await plugin.validateApiKey(trimmedKey)
+            if isValid {
+                let models = await plugin.fetchLLMModels()
+                await MainActor.run {
+                    isValidating = false
+                    validationResult = true
+                    if !models.isEmpty {
+                        fetchedLLMModels = models
+                        plugin.setFetchedLLMModels(models)
+                    }
+                }
+            } else {
+                await MainActor.run {
+                    isValidating = false
+                    validationResult = false
+                }
+            }
+        }
+    }
+
+    private func refreshLLMModels() {
+        Task {
+            let models = await plugin.fetchLLMModels()
             await MainActor.run {
-                isValidating = false
-                validationResult = isValid
+                if !models.isEmpty {
+                    fetchedLLMModels = models
+                    plugin.setFetchedLLMModels(models)
+                    if !models.contains(where: { $0.id == selectedLLMModel }),
+                       let first = models.first {
+                        selectedLLMModel = first.id
+                        plugin.selectLLMModel(first.id)
+                    }
+                }
             }
         }
     }
