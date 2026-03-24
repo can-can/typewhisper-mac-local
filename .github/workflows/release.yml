@@ -37,16 +37,18 @@ jobs:
             echo "tag=${{ github.ref_name }}" >> $GITHUB_OUTPUT
             echo "should_run=true" >> $GITHUB_OUTPUT
           else
-            # Schedule or manual trigger - create daily tag
-            # Tag format must match the exclusion pattern in push.tags above
+            # Schedule or manual trigger - resolve the daily tag name
+            # Tag format must match the exclusion pattern in push.tags above.
+            # Do not create the tag here: a failed downstream job would otherwise
+            # leave HEAD tagged and block all future retries for the same commit.
             VERSION=$(sed -n 's/.*MARKETING_VERSION = \([0-9.]*\);.*/\1/p' TypeWhisper.xcodeproj/project.pbxproj | head -1)
             DATE=$(date -u +%Y%m%d)
             TAG="v${VERSION}-daily.${DATE}"
 
-            # Skip if HEAD is already tagged (no new commits since last release)
-            EXISTING_TAGS=$(git tag --points-at HEAD)
+            # Skip if HEAD already has an app release tag.
+            EXISTING_TAGS=$(git tag --points-at HEAD | grep '^v[0-9]' || true)
             if [ -n "$EXISTING_TAGS" ]; then
-              echo "HEAD is already tagged: $EXISTING_TAGS - skipping daily"
+              echo "HEAD already has app release tags: $EXISTING_TAGS - skipping daily"
               echo "should_run=false" >> $GITHUB_OUTPUT
               echo "tag=" >> $GITHUB_OUTPUT
               exit 0
@@ -60,14 +62,9 @@ jobs:
               exit 0
             fi
 
-            git config user.name "github-actions[bot]"
-            git config user.email "github-actions[bot]@users.noreply.github.com"
-            git tag "$TAG"
-            git push origin "$TAG"
-
             echo "tag=$TAG" >> $GITHUB_OUTPUT
             echo "should_run=true" >> $GITHUB_OUTPUT
-            echo "Created daily tag: $TAG"
+            echo "Planned daily tag: $TAG"
           fi
 
   verify-release-build:
@@ -384,13 +381,26 @@ jobs:
           else
             echo "No existing release. Generating notes from commits..."
 
-            # Find previous tag (exclude current, filter to app tags only)
-            PREV_TAG=$(git tag --sort=-v:refname | grep '^v[0-9]' | grep -v "^${TAG}$" | head -1)
+            if [ "$RELEASE_CHANNEL" = "stable" ]; then
+              # Stable notes should compare against the previous stable release,
+              # not against an RC or daily tag that may point at the same commit.
+              PREV_TAG=$(git tag --sort=-v:refname | grep '^v[0-9][0-9.]*$' | grep -v "^${TAG}$" | head -1)
+            else
+              # Pre-release notes can compare against the latest app tag of any prerelease type.
+              PREV_TAG=$(git tag --sort=-v:refname | grep '^v[0-9]' | grep -v "^${TAG}$" | head -1)
+            fi
+
+            RANGE_END="$TAG"
+            RELEASE_TARGET=""
+            if ! git rev-parse "$TAG" >/dev/null 2>&1; then
+              RANGE_END="$(git rev-parse HEAD)"
+              RELEASE_TARGET="$RANGE_END"
+            fi
 
             if [ -n "$PREV_TAG" ]; then
-              RANGE="${PREV_TAG}..${TAG}"
+              RANGE="${PREV_TAG}..${RANGE_END}"
             else
-              RANGE="$TAG"
+              RANGE="$RANGE_END"
             fi
 
             # Parse commits into categories
@@ -439,16 +449,22 @@ jobs:
               NOTES="Maintenance release ${TAG}"
             fi
 
+            CREATE_ARGS=(
+              "$TAG"
+              "$ASSET_DMG"
+              "$ASSET_ZIP"
+              --title "$TAG"
+              --notes "$(printf '%b' "$NOTES")"
+            )
+
             if [ "$IS_PRERELEASE" = "true" ]; then
-              gh release create "$TAG" "$ASSET_DMG" "$ASSET_ZIP" \
-                --title "$TAG" \
-                --notes "$(printf '%b' "$NOTES")" \
-                --prerelease
-            else
-              gh release create "$TAG" "$ASSET_DMG" "$ASSET_ZIP" \
-                --title "$TAG" \
-                --notes "$(printf '%b' "$NOTES")"
+              CREATE_ARGS+=(--prerelease)
             fi
+            if [ -n "$RELEASE_TARGET" ]; then
+              CREATE_ARGS+=(--target "$RELEASE_TARGET")
+            fi
+
+            gh release create "${CREATE_ARGS[@]}"
           fi
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
