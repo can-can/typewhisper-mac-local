@@ -4,12 +4,6 @@
 [![macOS](https://img.shields.io/badge/macOS-14.0%2B-black.svg)](https://www.apple.com/macos/)
 [![Swift](https://img.shields.io/badge/Swift-6-orange.svg)](https://swift.org)
 
-Speech-to-text and AI text processing for macOS. Transcribe audio using on-device AI models or cloud APIs (Groq, OpenAI), then process the result with custom LLM prompts. Your voice data stays on your Mac with local models - or use cloud APIs for faster processing.
-
-TypeWhisper `1.0` is scoped as a reliable direct-download release. The supported core is system-wide dictation, file transcription, prompt processing, profiles, history, dictionary, snippets, and bundled integrations. HTTP API, CLI, widgets, and the plugin SDK remain available as advanced surfaces.
-
-See [docs/1.0-readiness.md](docs/1.0-readiness.md), [docs/support-matrix.md](docs/support-matrix.md), and [docs/release-checklist.md](docs/release-checklist.md) for the current release definition and ship gates.
-
 ## This Fork
 
 This is a personal fork of [TypeWhisper/typewhisper-mac](https://github.com/TypeWhisper/typewhisper-mac) focused on **local-only operation** — no cloud API plugins are included.
@@ -21,6 +15,14 @@ This is a personal fork of [TypeWhisper/typewhisper-mac](https://github.com/Type
 - Added `SpeechServicePlugin` for local speech engine integration
 - Plugin bundles are embedded via the build script rather than the Xcode Embed Plugins phase
 - Minor UI fixes (NavigationSplitView, settings window, permission status)
+
+## About
+
+Speech-to-text and AI text processing for macOS. Transcribe audio using on-device AI models or cloud APIs (Groq, OpenAI), then process the result with custom LLM prompts. Your voice data stays on your Mac with local models - or use cloud APIs for faster processing.
+
+TypeWhisper `1.0` is scoped as a reliable direct-download release. The supported core is system-wide dictation, file transcription, prompt processing, profiles, history, dictionary, snippets, and bundled integrations. HTTP API, CLI, widgets, and the plugin SDK remain available as advanced surfaces.
+
+See [docs/1.0-readiness.md](docs/1.0-readiness.md), [docs/support-matrix.md](docs/support-matrix.md), and [docs/release-checklist.md](docs/release-checklist.md) for the current release definition and ship gates.
 
 <p align="center">
   <video src="https://github.com/user-attachments/assets/22fe922d-4a4c-47d1-805e-684a148ebd03" autoplay loop muted playsinline width="270"></video>
