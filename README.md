@@ -10,6 +10,18 @@ TypeWhisper `1.0` is scoped as a reliable direct-download release. The supported
 
 See [docs/1.0-readiness.md](docs/1.0-readiness.md), [docs/support-matrix.md](docs/support-matrix.md), and [docs/release-checklist.md](docs/release-checklist.md) for the current release definition and ship gates.
 
+## This Fork
+
+This is a personal fork of [TypeWhisper/typewhisper-mac](https://github.com/TypeWhisper/typewhisper-mac) focused on **local-only operation** — no cloud API plugins are included.
+
+**Changes from upstream:**
+
+- Removed all remote network plugins: Groq, OpenAI, OpenAI Compatible, Gemini, Deepgram, AssemblyAI, Linear, Webhook
+- Disabled the remote plugin registry (no fetching or installing plugins from the internet)
+- Added `SpeechServicePlugin` for local speech engine integration
+- Plugin bundles are embedded via the build script rather than the Xcode Embed Plugins phase
+- Minor UI fixes (NavigationSplitView, settings window, permission status)
+
 <p align="center">
   <video src="https://github.com/user-attachments/assets/22fe922d-4a4c-47d1-805e-684a148ebd03" autoplay loop muted playsinline width="270"></video>
 </p>
@@ -123,6 +135,8 @@ Installed builds can switch channels in `Settings -> About` via the `Update Chan
 
 ## Build
 
+### Development (Xcode)
+
 1. Clone the repository:
    ```bash
    git clone https://github.com/TypeWhisper/typewhisper-mac.git
@@ -143,6 +157,32 @@ Installed builds can switch channels in `Settings -> About` via the `Update Chan
    xcodebuild test -project TypeWhisper.xcodeproj -scheme TypeWhisper -destination 'platform=macOS,arch=arm64' -parallel-testing-enabled NO CODE_SIGN_IDENTITY='-' CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO
    swift test --package-path TypeWhisperPluginSDK
    ```
+
+### Release Build (this fork)
+
+Use the included script to build a signed or unsigned DMG locally. It resolves packages, builds all plugin targets, embeds the bundles into the app, and packages the result.
+
+**Requirements:** Xcode 16+, [`pipx`](https://pipx.pypa.io/) (for `dmgbuild`)
+
+```bash
+# Unsigned DMG (no Apple Developer account needed)
+bash scripts/build-release-local.sh
+
+# Signed DMG (requires a Developer ID Application certificate in your keychain)
+bash scripts/build-release-local.sh --sign
+```
+
+Output is written to `build-release/`. The DMG is at `build-release/TypeWhisper-v<version>.dmg`.
+
+If signing, notarize after:
+```bash
+xcrun notarytool submit "build-release/TypeWhisper-v<version>.dmg" \
+  --apple-id YOUR_APPLE_ID \
+  --team-id YOUR_TEAM_ID \
+  --password YOUR_APP_PASSWORD \
+  --wait
+xcrun stapler staple "build-release/TypeWhisper-v<version>.dmg"
+```
 
 ## HTTP API
 
