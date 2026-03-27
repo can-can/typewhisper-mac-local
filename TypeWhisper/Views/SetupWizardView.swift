@@ -208,11 +208,6 @@ struct SetupWizardView: View {
                 dictation.requestAccessibilityPermission()
             }
 
-            if dictation.needsAccessibilityPermission {
-                Text(String(localized: "Recommended for pasting text into other apps. You can grant this later."))
-                    .font(.caption)
-                    .foregroundStyle(.orange)
-            }
 
             if !dictation.needsMicPermission {
                 Divider()
@@ -263,6 +258,11 @@ struct SetupWizardView: View {
                 }
                 .buttonStyle(.bordered)
                 .controlSize(.small)
+            }
+        }
+        .onAppear {
+            if dictation.needsMicPermission || dictation.needsAccessibilityPermission {
+                dictation.pollPermissionStatus()
             }
         }
     }

@@ -31,6 +31,7 @@ xcodebuild -resolvePackageDependencies \
 
 # Build
 echo "--- Building Release ---"
+mkdir -p "$BUILD_DIR"
 set -o pipefail
 xcodebuild -project "$PROJECT_DIR/$PROJECT" \
   -scheme "$SCHEME" \
@@ -39,7 +40,8 @@ xcodebuild -project "$PROJECT_DIR/$PROJECT" \
   -destination 'platform=macOS,arch=arm64' \
   CODE_SIGN_IDENTITY="-" \
   CODE_SIGNING_REQUIRED=NO \
-  CODE_SIGNING_ALLOWED=NO | tee "$BUILD_DIR/build.log"
+  CODE_SIGNING_ALLOWED=NO \
+| tee "$BUILD_DIR/build.log"
 
 bash "$PROJECT_DIR/scripts/check_first_party_warnings.sh" "$BUILD_DIR/build.log"
 
@@ -51,6 +53,17 @@ if [ ! -d "$APP_PATH" ]; then
 fi
 
 echo "--- App built at $APP_PATH ---"
+
+# Copy plugin bundles into app
+echo "--- Embedding Plugins ---"
+PLUGINS_DIR="$APP_PATH/Contents/PlugIns"
+mkdir -p "$PLUGINS_DIR"
+for bundle in "$BUILD_DIR/Build/Products/Release"/*Plugin.bundle; do
+  if [ -d "$bundle" ]; then
+    cp -R "$bundle" "$PLUGINS_DIR/"
+    echo "  Embedded: $(basename "$bundle")"
+  fi
+done
 
 # Sign if requested
 if [ "$SIGN" = true ]; then
@@ -80,7 +93,7 @@ echo "--- Creating DMG ---"
 # Check for dmgbuild
 if ! command -v dmgbuild &> /dev/null; then
   echo "dmgbuild not found. Installing..."
-  pip3 install dmgbuild
+  pipx install dmgbuild
 fi
 
 VERSION=$(defaults read "$APP_PATH/Contents/Info.plist" CFBundleShortVersionString 2>/dev/null || echo "dev")

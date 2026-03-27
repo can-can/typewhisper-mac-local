@@ -717,6 +717,7 @@ final class DictationViewModel: ObservableObject {
 
     func requestMicPermission() { settingsHandler.requestMicPermission() }
     func requestAccessibilityPermission() { settingsHandler.requestAccessibilityPermission() }
+    func pollPermissionStatus() { settingsHandler.pollPermissionStatus() }
     func setHotkey(_ hotkey: UnifiedHotkey, for slot: HotkeySlotType) { settingsHandler.setHotkey(hotkey, for: slot) }
     func clearHotkey(for slot: HotkeySlotType) { settingsHandler.clearHotkey(for: slot) }
     func isHotkeyAssigned(_ hotkey: UnifiedHotkey, excluding: HotkeySlotType) -> HotkeySlotType? { settingsHandler.isHotkeyAssigned(hotkey, excluding: excluding) }

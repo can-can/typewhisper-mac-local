@@ -1,0 +1,12 @@
+{
+    "id": "com.typewhisper.speechservice",
+    "name": "Speech Service",
+    "version": "1.0.0",
+    "minHostVersion": "0.9.0",
+    "minOSVersion": "14.0",
+    "author": "TypeWhisper",
+    "description": "Connect to a local Speech Service HTTP API for transcription (STT).",
+    "category": "transcription",
+    "iconSystemName": "network",
+    "principalClass": "SpeechServicePlugin"
+}

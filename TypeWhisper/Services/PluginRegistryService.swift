@@ -144,30 +144,7 @@ final class PluginRegistryService: ObservableObject {
     // MARK: - Fetch Registry
 
     func fetchRegistry() async {
-        if let lastFetch = lastFetchDate, Date().timeIntervalSince(lastFetch) < cacheDuration, !registry.isEmpty {
-            return
-        }
-
-        fetchState = .loading
-
-        do {
-            var request = URLRequest(url: registryURL)
-            request.cachePolicy = .reloadIgnoringLocalCacheData
-            let (data, _) = try await URLSession.shared.data(for: request)
-            let response = try JSONDecoder().decode(PluginRegistryResponse.self, from: data)
-
-            let appVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "0.0"
-            registry = response.plugins.filter {
-                Self.compareVersions($0.minHostVersion, appVersion) != .orderedDescending
-                    && $0.isCompatibleWithCurrentOS
-            }
-            lastFetchDate = Date()
-            fetchState = .loaded
-            logger.info("Fetched \(self.registry.count) plugin(s) from registry")
-        } catch {
-            fetchState = .error(error.localizedDescription)
-            logger.error("Failed to fetch registry: \(error.localizedDescription)")
-        }
+        fetchState = .loaded
     }
 
     // MARK: - Background Update Check
@@ -219,82 +196,7 @@ final class PluginRegistryService: ObservableObject {
     // MARK: - Download & Install
 
     func downloadAndInstall(_ plugin: RegistryPlugin) async {
-        guard let url = URL(string: plugin.downloadURL) else {
-            installStates[plugin.id] = .error("Invalid download URL")
-            return
-        }
-
-        installStates[plugin.id] = .downloading(0)
-
-        do {
-            let delegate = DownloadProgressDelegate { [weak self] progress in
-                Task { @MainActor in
-                    self?.installStates[plugin.id] = .downloading(progress)
-                }
-            }
-            let session = URLSession(configuration: .default, delegate: delegate, delegateQueue: nil)
-            let (tempURL, _) = try await session.download(from: url)
-
-            installStates[plugin.id] = .extracting
-
-            let tempDir = FileManager.default.temporaryDirectory
-                .appendingPathComponent(UUID().uuidString, isDirectory: true)
-            try FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
-            defer { try? FileManager.default.removeItem(at: tempDir) }
-
-            let zipPath = tempDir.appendingPathComponent("plugin.zip")
-            try FileManager.default.moveItem(at: tempURL, to: zipPath)
-
-            let extractDir = tempDir.appendingPathComponent("extracted", isDirectory: true)
-            try FileManager.default.createDirectory(at: extractDir, withIntermediateDirectories: true)
-
-            let process = Process()
-            process.executableURL = URL(fileURLWithPath: "/usr/bin/ditto")
-            process.arguments = ["-xk", zipPath.path, extractDir.path]
-            try process.run()
-            process.waitUntilExit()
-
-            guard process.terminationStatus == 0 else {
-                installStates[plugin.id] = .error("Failed to extract ZIP")
-                return
-            }
-
-            // Find .bundle in extracted directory
-            let extracted = try FileManager.default.contentsOfDirectory(at: extractDir, includingPropertiesForKeys: nil)
-            guard let bundleURL = extracted.first(where: { $0.pathExtension == "bundle" }) else {
-                installStates[plugin.id] = .error("No .bundle found in ZIP")
-                return
-            }
-
-            // Unload existing version if present
-            PluginManager.shared.unloadPlugin(plugin.id)
-
-            let destURL = PluginManager.shared.pluginsDirectory
-                .appendingPathComponent(bundleURL.lastPathComponent)
-
-            // Remove existing bundle if present
-            if FileManager.default.fileExists(atPath: destURL.path) {
-                try FileManager.default.removeItem(at: destURL)
-            }
-
-            try FileManager.default.moveItem(at: bundleURL, to: destURL)
-            PluginManager.shared.loadPlugin(at: destURL)
-
-            // Verify plugin actually loaded (e.g. incompatible macOS version fails silently)
-            if !PluginManager.shared.loadedPlugins.contains(where: { $0.manifest.id == plugin.id }) {
-                installStates[plugin.id] = .error(String(localized: "Plugin incompatible with this macOS version"))
-                logger.error("Plugin \(plugin.id) downloaded but failed to load")
-                return
-            }
-
-            installStates.removeValue(forKey: plugin.id)
-            lastFetchDate = nil // invalidate cache so installInfo refreshes
-            updateAvailableUpdatesCount()
-            logger.info("Installed plugin \(plugin.id) v\(plugin.version)")
-        } catch {
-            installStates[plugin.id] = .error(error.localizedDescription)
-            logger.error("Failed to install \(plugin.id): \(error.localizedDescription)")
-        }
+        installStates[plugin.id] = .error("Remote plugin installation is disabled")
     }
 
     // MARK: - Uninstall
@@ -372,28 +274,3 @@ final class PluginRegistryService: ObservableObject {
     }
 }
 
-// MARK: - Download Progress Delegate
-
-private final class DownloadProgressDelegate: NSObject, URLSessionDownloadDelegate, Sendable {
-    private let onProgress: @Sendable (Double) -> Void
-
-    init(onProgress: @escaping @Sendable (Double) -> Void) {
-        self.onProgress = onProgress
-    }
-
-    func urlSession(
-        _ session: URLSession,
-        downloadTask: URLSessionDownloadTask,
-        didWriteData bytesWritten: Int64,
-        totalBytesWritten: Int64,
-        totalBytesExpectedToWrite: Int64
-    ) {
-        guard totalBytesExpectedToWrite > 0 else { return }
-        let progress = Double(totalBytesWritten) / Double(totalBytesExpectedToWrite)
-        onProgress(progress)
-    }
-
-    func urlSession(_ session: URLSession, downloadTask: URLSessionDownloadTask, didFinishDownloadingTo location: URL) {
-        // Handled by the async download(from:) API
-    }
-}
